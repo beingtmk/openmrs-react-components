@@ -75,15 +75,28 @@ export const initializeLocalization = (messages) => {
 const withLocalization = (WrappedComponent) => {
   class Localization extends React.PureComponent {
 
+    constructor(props) {
+      super(props);
+      this.state = {
+        locale: defaultLocale
+      };
+    }
+
     componentDidMount() {
       this.props.dispatch(sessionActions.fetchSession());
     }
 
+    componentDidUpdate(prevProps) {
+      if (prevProps.locale !== this.props.locale) {
+        this.setState( {
+          locale: this.props.locale
+        })
+      }
+    }
+
     render() {
 
-      const locale = this.props.locale ? this.props.locale : defaultLocale;
-
-      const localeWithoutRegionCode = locale.toLowerCase().split(/[_-]+/)[0];
+      const localeWithoutRegionCode = this.state.locale.toLowerCase().split(/[_-]+/)[0];
       const defaultLocaleWithoutRegionCode = defaultLocale.toLowerCase().split(/[_-]+/)[0];
       const messages = merge({}, localeMessages[defaultLocaleWithoutRegionCode], localeMessages[localeWithoutRegionCode]);
 
@@ -94,7 +107,7 @@ const withLocalization = (WrappedComponent) => {
       return (
         <LocalizationContext.Provider value={ {intlProviderAvailable: true} }>
           <IntlProvider
-            locale={ locale.replace("_","-") }
+            locale={ this.state.locale.replace("_","-") }
             messages={messages}
           >
             <WrappedComponent {...this.props} />
